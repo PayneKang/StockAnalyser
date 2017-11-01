@@ -13,7 +13,7 @@ import java.util.concurrent.Executors;
 
 public class IndividualStockSpider {
 
-    private static final int MAX_THREAD_COUNT = 10;
+    private static final int MAX_THREAD_COUNT = 4;
     public static void main(String[] args) {
         // Start to get individual stock data
         System.out.print("开始进行个股信息抓取");
@@ -26,19 +26,24 @@ public class IndividualStockSpider {
         // Loop and get individual for all stocks
         // Create thread pool
         ExecutorService fixedThreadPool = Executors.newFixedThreadPool(MAX_THREAD_COUNT);
+        //ExecutorService fixedThreadPool = Executors.newCachedThreadPool();
         // Start Loop
         for(StockBaseInfoDal stock:allStock) {
-            while(StockDataCollector.getThreadCount() > MAX_THREAD_COUNT){
-                try {
-                    Thread.sleep(10);
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
-            }
+            WaitForEnoughResource();
             StockDataCollector collector = new StockDataCollector(stock.getCode());
             fixedThreadPool.execute(collector);
         }
         // End Loop
+        fixedThreadPool.shutdown();
         System.out.println("Finished");
+    }
+    private static void WaitForEnoughResource(){
+        while(StockDataCollector.getThreadCount() > MAX_THREAD_COUNT){
+            try {
+                Thread.sleep(1);
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        }
     }
 }
